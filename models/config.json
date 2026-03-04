@@ -1,0 +1,50 @@
+{
+  "model_name": "odor-prediction",
+  "model_type": "xgboost",
+  "task": "multi-label-classification",
+  "num_labels": 112,
+  "num_ratings": 3,
+  "feature_dim": 2048,
+  "labels": [
+    "alcoholic", "aldehydic", "alliaceous", "almond", "animal", "anisic",
+    "apple", "apricot", "aromatic", "balsamic", "banana", "beefy",
+    "berry", "bitter", "blackberry", "blueberry", "brandy", "bread",
+    "burnt", "buttery", "cabbage", "camphoreous", "caramellic", "carrot",
+    "cassic", "cedar", "celery", "chamomile", "cheesy", "cherry",
+    "chocolate", "cinnamon", "citrus", "clean", "clove", "cocoa",
+    "coconut", "coffee", "cognac", "cooked", "cooling", "cortex",
+    "coumarinic", "creamy", "cucumber", "dairy", "dry", "earthy",
+    "ester", "ethereal", "fatty", "fermented", "fishy", "floral",
+    "fresh", "fruity", "garlic", "gassy", "geranium", "ginger",
+    "grape", "grapefruit", "green", "grilled", "hazelnut", "herbal",
+    "honey", "hyacinth", "jasmin", "juicy", "ketonic", "lactonic",
+    "lavender", "leafy", "leathery", "lemon", "lily", "malty",
+    "meaty", "medicinal", "melon", "metallic", "milky", "minty",
+    "mossy", "mushroom", "musk", "musty", "nutty", "oaky",
+    "oily", "onion", "orange", "orchid", "ozone", "papaya",
+    "peach", "pear", "peppermint", "phenolic", "pine", "pineapple",
+    "plum", "popcorn", "potato", "pungent", "radish", "raspberry",
+    "roasted", "rose", "rummy", "rum", "salty", "savory",
+    "sharp", "smoky", "soapy", "solvent", "sour", "spicy",
+    "strawberry", "sulfurous", "sweet", "tea", "terpentine", "tobacco",
+    "tomato", "tropical", "vanilla", "vegetable", "violet", "warm",
+    "watermelon", "waxy", "weedy", "wine", "woody"
+  ],
+  "ratings": ["Pleasantness", "Intensity", "Familiarity"],
+  "metrics": {
+    "classifier": {
+      "top20_macro_f1": 0.45,
+      "mean_auc_roc": 0.84
+    },
+    "regressor": {
+      "pleasantness_pearson_r": 0.55,
+      "intensity_pearson_r": 0.34,
+      "familiarity_pearson_r": 0.44
+    }
+  },
+  "training_data": {
+    "classifier_molecules": 4738,
+    "regressor_molecules": 515,
+    "sources": ["GoodScents", "Leffingwell", "Keller2016", "Keller2012", "MA2021", "Arshamian2022"]
+  }
+}
