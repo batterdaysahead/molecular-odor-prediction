@@ -48,6 +48,9 @@ The app uses pickle-free model formats:
 - **Odor Descriptors:** 117 possible descriptors with tuned thresholds
 - **Perceptual Ratings:** Pleasantness, Intensity, Familiarity (0-1 scale)
 - **Radar Chart:** Visual odor fingerprint
+- **Molecule Structure:** Displayed locally (requires RDKit with drawing support)
+
+**Note:** On Streamlit Cloud, molecule structure images are not available due to missing system libraries. The app gracefully degrades and shows a message instead. All other features work normally.
 
 ## Performance
 

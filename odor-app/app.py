@@ -15,7 +15,7 @@ import pandas as pd
 import streamlit as st
 import torch
 from rdkit import Chem, DataStructs
-from rdkit.Chem import AllChem, Draw
+from rdkit.Chem import AllChem
 from PIL import Image
 import pubchempy as pcp
 import plotly.graph_objects as go
@@ -23,6 +23,13 @@ from safetensors.torch import load_file
 from xgboost import XGBClassifier
 
 warnings.filterwarnings('ignore')
+
+# Try to import RDKit Draw (may not be available on Streamlit Cloud)
+try:
+    from rdkit.Chem import Draw
+    HAS_RDKIT_DRAW = True
+except Exception:
+    HAS_RDKIT_DRAW = False
 
 # ============================================================================
 # Path Configuration
@@ -201,22 +208,34 @@ def resolve_molecule(user_input: str):
         try:
             # Search PubChem by SMILES
             compound = pcp.get_compounds(user_input, 'smiles')[0]
+            image = None
+            if HAS_RDKIT_DRAW:
+                try:
+                    image = Draw.MolToImage(mol, size=(300, 300))
+                except Exception:
+                    pass
             return {
                 'smiles': compound.smiles,
                 'name': compound.iupac_name or compound.synonyms[0] if compound.synonyms else "Unknown",
                 'cid': compound.cid,
                 'mol': mol,
-                'image': Draw.MolToImage(mol, size=(300, 300)),
+                'image': image,
                 'error': None
             }
         except Exception:
             # SMILES valid but not in PubChem
+            image = None
+            if HAS_RDKIT_DRAW:
+                try:
+                    image = Draw.MolToImage(mol, size=(300, 300))
+                except Exception:
+                    pass
             return {
                 'smiles': user_input,
                 'name': "Custom Molecule",
                 'cid': None,
                 'mol': mol,
-                'image': Draw.MolToImage(mol, size=(300, 300)),
+                'image': image,
                 'error': None
             }
     
@@ -233,12 +252,18 @@ def resolve_molecule(user_input: str):
                 'image': None,
                 'error': "Could not generate structure from PubChem data"
             }
+        image = None
+        if HAS_RDKIT_DRAW:
+            try:
+                image = Draw.MolToImage(mol, size=(300, 300))
+            except Exception:
+                pass
         return {
             'smiles': compound.smiles,
             'name': compound.iupac_name or user_input,
             'cid': compound.cid,
             'mol': mol,
-            'image': Draw.MolToImage(mol, size=(300, 300)),
+            'image': image,
             'error': None
         }
     except Exception as e:
@@ -374,27 +399,31 @@ def main():
         st.subheader("Model Info")
         st.markdown(f"""
         **{config.get('model_name', 'Odor Prediction')}**
-        - Classifier: XGBoost (117 estimators)
-        - Regressor: MLP (4 layers)
-        - Features: Morgan FP (2048 bits)
+        - Labels: {config.get('num_labels', 'N/A')} descriptors
+        - Ratings: {', '.join(config.get('ratings', []))}
+        - Features: Morgan FP ({config.get('feature_dim', 'N/A')} bits)
         """)
         
-        st.divider()
-        
-        st.subheader("Performance")
-        st.markdown("""
-        **Classifier** (XGBoost)
-        - AUC-ROC: 0.84
-        - Top-20 F1: 0.45 ✨
-        - Full F1: 0.33
-        - Labels: 117 descriptors
-        - ✅ Threshold-tuned per label
-        
-        **Regressor** (MLP)
-        - Pleasantness: r = 0.55
-        - Intensity: r = 0.34
-        - Familiarity: r = 0.44
-        """)
+        # Show metrics if available
+        if 'metrics' in config:
+            st.divider()
+            st.subheader("Performance")
+            metrics = config['metrics']
+            if 'classifier' in metrics:
+                clf_metrics = metrics['classifier']
+                st.markdown(f"""
+                **Classifier**
+                - AUC-ROC: {clf_metrics.get('mean_auc_roc', 'N/A')}
+                - Top-20 F1: {clf_metrics.get('top20_macro_f1', 'N/A')}
+                """)
+            if 'regressor' in metrics:
+                reg_metrics = metrics['regressor']
+                st.markdown(f"""
+                **Regressor**
+                - Pleasantness: r = {reg_metrics.get('pleasantness_pearson_r', 'N/A')}
+                - Intensity: r = {reg_metrics.get('intensity_pearson_r', 'N/A')}
+                - Familiarity: r = {reg_metrics.get('familiarity_pearson_r', 'N/A')}
+                """)
         
         st.divider()
         
@@ -458,6 +487,8 @@ def main():
     with col1:
         if mol_data['image']:
             st.image(mol_data['image'], caption=mol_data['name'], width="stretch")
+        else:
+            st.info("🧪 Structure visualization not available")
     
     with col2:
         st.subheader(mol_data['name'])
