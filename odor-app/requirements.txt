@@ -8,3 +8,4 @@ pubchempy>=1.0.4
 plotly>=5.18.0
 pandas>=2.0.0
 pillow>=10.0.0
+scikit-learn>=1.0.0
